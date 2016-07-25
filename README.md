@@ -1,6 +1,7 @@
 # witchsong
-A Shazam clone written in python
-This system only accepts wav files sampled at 44.1KHz as input
+A Shazam clone written in Python.
+
+This system only accepts *wav* files sampled at 44.1KHz as input
 
 ## INSTALLATION:
 You need numpy and scipy installed for this to work:
