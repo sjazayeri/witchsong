@@ -29,7 +29,7 @@ def find(db, input_filename):
     frames = get_frames(input_filename)
     n_ranges = len(FREQ_RANGES)
 
-    c_max_match = (None, None)
+    result = defaultdict(lambda: None)
     for i in xrange(0, SEGLEN, STEP):
         input_fingerprint = get_fingerprint(frames[i:])
         for fingerprint, filename in db:
@@ -48,12 +48,10 @@ def find(db, input_filename):
                 matches = next_round
                 best = max(matches, key = lambda x: (x[2], x[3])) if matches else (None, None, None, None)
                 c_score = (best[2], best[3])
-                max_score = max(max_score, c_score)
-
-            print max_score, filename
-            c_max_match = max((max_score, filename), c_max_match)
-            
-    return c_max_match
+                # max_score = max(max_score, c_score)
+                result[filename] = max(result[filename], c_score)
+                
+    return result
         
     
 if __name__ == '__main__':
@@ -64,4 +62,10 @@ if __name__ == '__main__':
     dbfilename, input_filename = sys.argv[1:]
 
     db = read_db(dbfilename)
-    print find(db, input_filename)
+    result = find(db, input_filename)
+    info_len = min(MAX_RES_SHOW, len(result))
+
+    for filename, score in sorted(result.iteritems(),
+                                  key = lambda x: x[1],
+                                  reverse=True)[:info_len]:
+        print '%s: %d'%(filename.strip(), score[0])
