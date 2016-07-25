@@ -3,8 +3,9 @@
 import numpy as np
 from scipy.io import wavfile as wav
 from config import *
-from index import get_frames, get_fingerprint, Ridge
+from index import get_frames, get_fingerprint
 from collections import defaultdict
+from utils.koffdict import KOffDict
 import sys
 
 def read_db(dbfilename):
@@ -18,17 +19,16 @@ def read_db(dbfilename):
             
             fingerprint = defaultdict(lambda: set())
             for i in xrange(0, len(nums), n_ranges):
-                fingerprint[Ridge(nums[i:i+n_ranges])].add(i)
-                for j in xrange(n_ranges):
-                    fingerprint[Ridge(nums[i:i+j]+nums[j+1:n_ranges])].add(i)
-                    
-            result.append((fingerprint, filename))
+                fingerprint[tuple(nums[i:i+n_ranges])].add(i/n_ranges)
+            result.append((KOffDict(fingerprint,
+                                    n_ranges,
+                                    SET_EPSILON), filename))
     return result
 
 def find(db, input_filename):
     frames = get_frames(input_filename)
     n_ranges = len(FREQ_RANGES)
-    
+
     c_max_match = (None, None)
     for i in xrange(0, SEGLEN, STEP):
         input_fingerprint = get_fingerprint(frames[i:])
@@ -36,21 +36,23 @@ def find(db, input_filename):
             matches = set()
             max_score = 0
             for ridge in input_fingerprint:
-                next_round = {(i, 0, 1, 0) for i in fingerprint[ridge]}
-                for j in xrange(n_ranges):
-                    r = Ridge(ridge.freqs[0:j]+ridge.freqs[j+1:n_ranges])
-                    for match in matches:
-                        if match[0]+1 in fingerprint[r]:
-                            next_round.add((match[0]+1, 0, match[2]+1, match[3]))
-                        elif match[1] < SEQ_EPSILON:
-                            next_round.add((match[0]+1, match[1]+1, match[2], match[3]-1))
+                next_round = {(j, 0, 1, 0) for j in fingerprint[ridge]}
+                for match in matches:
+                    if match[0]+1 in fingerprint[ridge]:
+                        next_round.add((match[0]+1, 0,
+                                        match[2]+1, match[3]))
+                    elif match[1] < SEQ_EPSILON:
+                        next_round.add((match[0]+1, match[1]+1,
+                                        match[2], match[3]-1))
+
                 matches = next_round
-                best = max(next_round, key = lambda x: (x[2], x[3])) if next_round else (None, None, None, None)
+                best = max(matches, key = lambda x: (x[2], x[3])) if matches else (None, None, None, None)
                 c_score = (best[2], best[3])
                 max_score = max(max_score, c_score)
-            print (max_score, filename)
-            c_max_match = max((max_score, filename), c_max_match)
 
+            print max_score, filename
+            c_max_match = max((max_score, filename), c_max_match)
+            
     return c_max_match
         
     
