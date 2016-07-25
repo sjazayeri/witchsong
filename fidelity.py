@@ -2,6 +2,7 @@
 
 from index import get_fingerprint
 from scipy.io import wavfile as wav
+from config import *
 import sys
 
 def mismatches(frames, offset):
@@ -10,7 +11,8 @@ def mismatches(frames, offset):
 
     result = 0
     for r1, r2 in zip(f1, f2):
-        if not r1 == r2:
+        common = set(r1).intersection(set(r2))
+        if len(common) < len(r1)-SET_EPSILON:
             #print r1.freqs, r2.freqs
             result += 1
 
