@@ -19,7 +19,7 @@ def read_db(dbfilename):
             
             fingerprint = defaultdict(lambda: set())
             for i in xrange(0, len(nums), n_ranges):
-                fingerprint[tuple(nums[i:i+n_ranges])].add(i)
+                fingerprint[tuple(nums[i:i+n_ranges])].add(i/n_ranges)
             result.append((KOffDict(fingerprint,
                                     n_ranges,
                                     SET_EPSILON), filename))
@@ -36,7 +36,7 @@ def find(db, input_filename):
             matches = set()
             max_score = 0
             for ridge in input_fingerprint:
-                next_round = {(i, 0, 1, 0) for i in fingerprint[ridge]}
+                next_round = {(j, 0, 1, 0) for j in fingerprint[ridge]}
                 for match in matches:
                     if match[0]+1 in fingerprint[ridge]:
                         next_round.add((match[0]+1, 0,
@@ -46,7 +46,7 @@ def find(db, input_filename):
                                         match[2], match[3]-1))
 
                 matches = next_round
-                best = max(next_round, key = lambda x: (x[2], x[3])) if next_round else (None, None, None, None)
+                best = max(matches, key = lambda x: (x[2], x[3])) if matches else (None, None, None, None)
                 c_score = (best[2], best[3])
                 max_score = max(max_score, c_score)
 
