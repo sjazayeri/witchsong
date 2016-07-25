@@ -16,7 +16,7 @@ def keypoints(freqs, ranges):
     for r in ranges:
         cmax, freq = None, None
         for i in xrange(r[0], r[1]):
-            cval = abs(sum(freqs[i-RADIUS:i+RADIUS+1]))
+            cval = abs(freqs[i])
             if cval > cmax:
                 cmax, freq = cval, i
         result.append(freq)
